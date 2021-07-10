@@ -1,30 +1,59 @@
 package com.example.cpcalendar;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 public class RcAdapter extends RecyclerView.Adapter<RcAdapter.ViewHolder> {
 
     private Datum[] mData;
     private OnContestInfoListener mOnContestInfoListener;
+    private ProgressBar progressBar;
 
-    public RcAdapter(Datum[] data,OnContestInfoListener onContestInfoListener) {
+    private static SimpleDateFormat sdfInput = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.SSS'Z'");
+    private static SimpleDateFormat sdfOutput = new SimpleDateFormat("dd MMM yyyy','HH:mm");
+
+    public RcAdapter(Datum[] data, OnContestInfoListener onContestInfoListener, ProgressBar progressBar) {
         mData = data;
         mOnContestInfoListener=onContestInfoListener;
+        this.progressBar = progressBar;
     }
 
+    static String[] getDateAndTime(String datetime){
+
+        String[] date_time = new String[0];
+
+        sdfInput.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+
+        try {
+            // parse is used to convert String to Date
+            Date date = sdfInput.parse(datetime);
+
+            // format is used to change the format of the current date in string...
+            String date_output = sdfOutput.format(date);
+
+            date_time= date_output.split(",");
+
+        } catch (ParseException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return date_time;
+    }
 
     @NonNull
     @Override
@@ -46,21 +75,9 @@ public class RcAdapter extends RecyclerView.Adapter<RcAdapter.ViewHolder> {
         // Get the data model based on position
         Datum datum = mData[position];
 
-        String[] date_time_start = datum.getStartTime().split("T");
+        String[] date_time_start = getDateAndTime(datum.getStartTime());
+        String[] date_time_end = getDateAndTime(datum.getEndTime());
 
-/*        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-        SimpleDateFormat formatter;
-        try {
-            Date date = format.parse(datum.getStartTime());
-            formatter = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss z");
-            String strDate = formatter.format(date);
-            Log.e("ye hai actual",strDate);
-        } catch (ParseException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }*/
-
-        String[] date_time_end = datum.getEndTime().split("T");
 
         holder.mTvContestName.setText(datum.getName());
         holder.mTvContestSite.setText(datum.getSite());
@@ -68,6 +85,38 @@ public class RcAdapter extends RecyclerView.Adapter<RcAdapter.ViewHolder> {
         holder.mTvContestEndTime.setText(date_time_end[0]);
         holder.mTvContestStartDate.setText(date_time_start[1]);
         holder.mTvContestEndDate.setText(date_time_end[1]);
+
+        int color_id = R.color.white;
+        
+        SimpleDateFormat sdf1 = new SimpleDateFormat("dd/MM/yyyy");
+        SimpleDateFormat sdf2 = new SimpleDateFormat("dd MMM yyyy");
+        Date startDate = null;
+        Date endDate = null;
+        
+        try{
+            startDate = sdf2.parse(date_time_start[0]);
+            String startDateFormatted = sdf1.format(startDate);
+
+            startDate = sdf1.parse(startDateFormatted);
+
+//            endDate = sdf2.parse(date_time_start[0]);
+//            String endDateFormatted = sdf1.format(endDate);
+
+//            endDate = sdf1.parse(endDateFormatted);
+
+            if (System.currentTimeMillis() >= startDate.getTime() ) {
+                color_id = R.color.active_contests;
+            }
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        int color = holder.mRecyclerViewRowLayout.getContext().getResources().getColor(color_id);
+        holder.mRecyclerViewRowLayout.setCardBackgroundColor(color);
+
+        progressBar.setVisibility(View.INVISIBLE);
+
     }
 
     @Override
@@ -86,6 +135,7 @@ public class RcAdapter extends RecyclerView.Adapter<RcAdapter.ViewHolder> {
         public TextView mTvContestEndTime;
         public TextView mTvContestStartDate;
         public TextView mTvContestEndDate;
+        private CardView mRecyclerViewRowLayout;
         OnContestInfoListener onContestInfoListener;
         // We also create a constructor that accepts the entire item row
         // and does the view lookups to find each subview
@@ -93,6 +143,7 @@ public class RcAdapter extends RecyclerView.Adapter<RcAdapter.ViewHolder> {
             // Stores the itemView in a public final member variable that can be used
             // to access the context from any ViewHolder instance.
             super(itemView);
+            mRecyclerViewRowLayout = itemView.findViewById(R.id.recycler_view_row_layout);
             this.onContestInfoListener = onContestInfoListener;
             mTvContestSite = itemView.findViewById(R.id.tv_contest_site);
             mTvContestName = itemView.findViewById(R.id.tv_contest_name);

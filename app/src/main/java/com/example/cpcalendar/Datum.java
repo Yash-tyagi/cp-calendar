@@ -4,7 +4,12 @@ package com.example.cpcalendar;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Datum {
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Comparator;
+import java.util.Date;
+
+public class Datum implements java.io.Serializable, Cloneable,Comparable<Datum> {
 
     @SerializedName("name")
     @Expose
@@ -95,4 +100,24 @@ public class Datum {
         this.status = status;
     }
 
+    @Override
+    public int compareTo(Datum o) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.SSS'Z'");
+
+        Date date1 = null;
+        Date date2 = null;
+        try {
+            date1 = sdf.parse(this.getStartTime());
+            date2 = sdf.parse(o.getStartTime());
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        if (date1.before(date2)) {
+            // previous date
+            return 1;
+        }
+        return 0;
+    }
 }

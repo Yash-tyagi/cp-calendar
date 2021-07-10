@@ -1,32 +1,32 @@
 package com.example.cpcalendar;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.CalendarContract;
+import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.github.ybq.android.spinkit.sprite.Sprite;
+import com.github.ybq.android.spinkit.style.ChasingDots;
+import com.github.ybq.android.spinkit.style.DoubleBounce;
+import com.github.ybq.android.spinkit.style.FoldingCube;
+import com.github.ybq.android.spinkit.style.WanderingCubes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity{
 
@@ -34,6 +34,8 @@ public class MainActivity extends AppCompatActivity{
     private TextView mJsonData;
     private RecyclerView mRvMainScreen;
     private Datum[]data;
+    private ProgressBar progressBar;
+
 //    https://kontests.net/api/v1/all
 
     private static final String GET_ALL_CONTEST_DETAILS_URL = "https://kontests.net/api/v1/all";
@@ -48,11 +50,14 @@ public class MainActivity extends AppCompatActivity{
 
         mRequestQueue = Volley.newRequestQueue(this);
 
+        progressBar = findViewById(R.id.progressBar);
+        Sprite progress_bar_style = new WanderingCubes();
+        progressBar.setIndeterminateDrawable(progress_bar_style);
+
         fetchJsonResponse();
     }
 
     private void fetchJsonResponse() {
-
         StringRequest stringRequest = new StringRequest(Request.Method.GET, GET_ALL_CONTEST_DETAILS_URL, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
@@ -61,14 +66,17 @@ public class MainActivity extends AppCompatActivity{
 
                     data = gson.fromJson(String.valueOf(response), Datum[].class);
 
-                    mRvMainScreen.setAdapter(new RcAdapter(data, new RcAdapter.OnContestInfoListener() {
+                    // sorting the data according to the dates first and then time
+                    Arrays.sort(data);
+//                    progressBar.setVisibility(View.INVISIBLE);
+                mRvMainScreen.setAdapter(new RcAdapter(data, new RcAdapter.OnContestInfoListener() {
                         @Override
                         public void onContestInfoClick(int position) {
                             Datum contestDetails = data[position];
 //                            Toast.makeText(getApplicationContext(),contestDetails.getName(),Toast.LENGTH_SHORT).show();
                             addEvent(contestDetails.getName());
                         }
-                    }));
+                    }, progressBar));
 
 //                    for(int i=0; i<data.length; i++){
 //                        String name = data[i].getName();
@@ -98,3 +106,9 @@ public class MainActivity extends AppCompatActivity{
     }
 
 }
+
+/*
+* You can use any Of them for progress bar....
+* https://github.com/ybq/Android-SpinKit
+*
+* */
